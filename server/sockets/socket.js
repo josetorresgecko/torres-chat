@@ -13,22 +13,24 @@ io.on('connection', (client) => {
     }
       client.join(data.sala);
       const personas = usuarios.agregarPersona(client.id,data.nombre,data.sala);
-      client.broadcast.to(data.sala).emit('listPersonas',usuarios.getPersonasporSala(data.sala));
-      return callback(usuarios.getPersonasporSala(data.sala));
+      client.broadcast.to(data.sala).emit('listaPersona',usuarios.getPersonasporSala(data.sala));
+      client.broadcast.to(data.sala).emit('crearMensaje',crearMensaje('Administrador',`${data.nombre} ingresó al chat`));
+      callback(usuarios.getPersonasporSala(data.sala));
   });
-  client.on('crearMensaje', (data)=> {
+  client.on('crearMensaje', (data,callback)=> {
       const persona = usuarios.getPersona(client.id);
-      const mensaje = crearMensaje(persona.nombre,data.message);
+      const mensaje = crearMensaje(persona.nombre,data.mensaje);
       client.broadcast.to(persona.sala).emit('crearMensaje',mensaje);
+      callback(mensaje);
   });
   client.on('disconnect',()=>{
     const personaBorrada = usuarios.borrarPersona(client.id);
     client.broadcast.to(personaBorrada.sala).emit('crearMensaje',crearMensaje('Administrador',`${personaBorrada.nombre} abandonó el chat`));
-    client.broadcast.to(personaBorrada.sala).emit('listPersonas',usuarios.getPersonasporSala(personaBorrada.sala));
+    client.broadcast.to(personaBorrada.sala).emit('listaPersona',usuarios.getPersonasporSala(personaBorrada.sala));
   }); 
   client.on('mensajePrivado', function(data) {
     const persona = usuarios.getPersona(client.id);
-    const mensaje = crearMensaje(persona.nombre,data.message);
+    const mensaje = crearMensaje(persona.nombre,data.mensaje);
     client.broadcast.to(data.para).emit('mensajePrivado',mensaje);
   });
 
